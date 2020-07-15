@@ -24,6 +24,7 @@ class Stomp:
         protocol = "ws://" if wss is False else "wss://"
 
         self.url = protocol + ws_host
+        print('you are connecting to '+self.url)
 
         self.dispatcher = Dispatcher(self)
 
@@ -42,7 +43,7 @@ class Stomp:
 
         # wait until connected
         while self.connected is False:
-            time.sleep(.50)
+            time.sleep(1)
 
         return self.connected
 
@@ -67,7 +68,7 @@ class Dispatcher:
         The Dispatcher handles all network I/O and frame marshalling/unmarshalling
         """
         self.stomp = stomp
-
+        self.subId=1
         self.ws = websocket.WebSocketApp(self.stomp.url)
 
         # register websocket callbacks
@@ -76,16 +77,15 @@ class Dispatcher:
         self.ws.on_error = self._on_error
         self.ws.on_close = self._on_close
 
+        self.opened = False
         # run event loop on separate thread
         Thread(target=self.ws.run_forever).start()
 
-        self.opened = False
-
         # wait until connected
         while self.opened is False:
-            time.sleep(.50)
+            time.sleep(1)
 
-    def _on_message(self, ws, message):
+    def _on_message(self, message):
         """
         Executed when messages is received on WS
         """
@@ -101,23 +101,24 @@ class Dispatcher:
         if command == "MESSAGE":
             self.stomp.callback_registry[headers['destination']](body)
 
-    def _on_error(self, ws, error):
+    def _on_error(self, error):
         """
         Executed when WS connection errors out
         """
         print(error)
 
-    def _on_close(self, ws):
+    def _on_close(self):
         """
         Executed when WS connection is closed
         """
         print("### closed ###")
 
-    def _on_open(self, ws):
+    def _on_open(self):
         """
         Executed when WS connection is opened
         """
         self.opened = True
+        print("### ws connected ###")
 
     def _transmit(self, command, headers, msg=None):
         """
@@ -180,7 +181,6 @@ class Dispatcher:
         """
         headers = {}
 
-        headers['host'] = self.stomp.url
         headers['accept-version'] = VERSIONS
         headers['heart-beat'] = '10000,10000'
 
@@ -192,8 +192,8 @@ class Dispatcher:
         """
         headers = {}
 
-        # TODO id should be auto generated
-        headers['id'] = 'sub-1'
+        headers['id'] = 'sub-%d'%(self.subId)
+        self.subId+=1
         headers['ack'] = 'client'
         headers['destination'] = destination
 

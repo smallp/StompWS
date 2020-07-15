@@ -1,7 +1,10 @@
 # StompWS
 A Python library that enables simple [STOMP](https://stomp.github.io/) communication over WebSockets. Works on the client-side with any STOMP server.
 
+<b>Because of the update of `Websocket Client`, this library cannot work properly. So I just fork it and make it workable.</b>
+
 ## Need
+
 WebSockets have grown into an elementary tool that allow applications to exchange data bi-directionally over the web. In most cases, browsers communicate to webservers in interactive websites. However, there might be cases where services communicate with each other in real time.  
 
 For such use-cases, StompWS enables applications written in Python to communicate with STOMP based webservices through a simple API.
