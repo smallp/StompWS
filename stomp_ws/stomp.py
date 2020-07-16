@@ -10,7 +10,7 @@ BYTE = {
 VERSIONS = '1.0,1.1'
 
 class Stomp:
-    def __init__(self, host, sockjs=False, wss=True):
+    def __init__(self, host, sockjs=False, wss=True,debug=False):
         """
         Initialize STOMP communication. This is the high level API that is exposed to clients.
 
@@ -20,16 +20,21 @@ class Stomp:
             wss: True if communication is over SSL
         """
         # websocket.enableTrace(True)
+        self.debug=debug
         ws_host = host if sockjs is False else host + "/websocket"
         protocol = "ws://" if wss is False else "wss://"
 
         self.url = protocol + ws_host
-        print('you are connecting to '+self.url)
+        if self.debug:
+            print('you are connecting to '+self.url)
 
         self.dispatcher = Dispatcher(self)
 
         # maintain callback registry for subscriptions -> topic (str) vs callback (func)
         self.callback_registry = {}
+
+    def setDebug(self, isEnabled):
+        self.debug=isEnabled
 
     def connect(self):
         """
@@ -89,7 +94,8 @@ class Dispatcher:
         """
         Executed when messages is received on WS
         """
-        print("<<< " + message)
+        if self.stomp.debug:
+            print("<<< " + message)
 
         command, headers, body = self._parse_message(message)
 
@@ -144,7 +150,8 @@ class Dispatcher:
         frame = ''.join(lines)
 
         # transmit over ws
-        print(">>>" + frame)
+        if self.stomp.debug:
+            print(">>>" + frame)
         self.ws.send(frame)
 
     def _parse_message(self, frame):
